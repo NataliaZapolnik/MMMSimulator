@@ -34,8 +34,8 @@ with dpg.window(tag="main"):
         with dpg.group(width=200):
             dpg.add_text("Sygnał wejściowy:")
             dpg.add_combo(tag="signal_selector", label="Sygnał", items=["Sygnał prostokątny", "Sygnał sinusoidalny", "Sygnał trójkątny"], default_value="Sygnał prostokątny")
-            dpg.add_input_float(tag="kp_input", label="Kp", default_value=0.0)
-            dpg.add_input_float(tag="ki_input", label="Ki", default_value=0.0)
+            dpg.add_input_float(tag="amplitude_input", label="Amplituda", default_value=1.0)
+            dpg.add_input_float(tag="frequency_input", label="Częstotliwość", default_value=1.0)
         # Parametry regulatora PI
         with dpg.group(width=200):
             dpg.add_text("Parametry układu:")
@@ -44,7 +44,9 @@ with dpg.window(tag="main"):
             dpg.add_input_float(tag="b2_input", label="b2", default_value=0.0)
             dpg.add_input_float(tag="b1_input", label="b1", default_value=0.0)
             dpg.add_input_float(tag="b0_input", label="b0", default_value=0.0)
-            dpg.add_button(label="Regulator PI", callback=piRegulatorCallback)
+            dpg.add_input_float(tag="kp_input", label="Kp", default_value=0.0)
+            dpg.add_input_float(tag="ki_input", label="Ki", default_value=0.0)
+
 
         # Czas symulacji
         with dpg.group(width=200):

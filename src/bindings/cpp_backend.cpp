@@ -4,7 +4,7 @@
 #include <corecrt_math_defines.h>
 
 enum class InputSignalType{
-    SINUS, SQUARE, TRIANGLE
+    SINUS, SQUARE, TRIANGLE, IMPULSE
 };
 
 class Parameters {
@@ -16,6 +16,7 @@ public:
     double frequency = 1.0;
     double duration = 10.0;
     double dt = 0.01;
+    double impulse_duration=1.0;
 };
 
 class Simulation{
@@ -33,6 +34,8 @@ public:
         case InputSignalType::TRIANGLE :
             input_signal = triangle(parameters);
             break;
+        case InputSignalType::IMPULSE :
+            input_signal = impulse(parameters);
        } 
        start_simulation(parameters);
     };
@@ -72,6 +75,18 @@ private:
             double cycle = fmod(t, T) / T;
             double value = (cycle < 0.5) ? (4 * params.amplitude * cycle - params.amplitude) : (-4 * params.amplitude * (cycle - 0.5) + params.amplitude);
             signal.push_back(value);
+        }
+        return signal;
+    }
+
+    std::vector<double> impulse(Parameters params) {
+        std::vector<double> signal;
+        double impulse_end = params.impulse_duration;
+        for (double t = 0.0; t <= params.duration; t += params.dt) {
+            if(t<=impulse_end)
+                signal.push_back(params.amplitude);
+            else
+                signal.push_back(0.0);
         }
         return signal;
     }
@@ -121,6 +136,7 @@ PYBIND11_MODULE(cpp_backend, m) {
         .value("SINUS", InputSignalType::SINUS)
         .value("SQUARE", InputSignalType::SQUARE)
         .value("TRIANGLE", InputSignalType::TRIANGLE)
+        .value("IMPULSE", InputSignalType::IMPULSE)
         .export_values();
 
     py::class_<Parameters>(m, "Parameters")
@@ -135,6 +151,7 @@ PYBIND11_MODULE(cpp_backend, m) {
         .def_readwrite("amplitude", &Parameters::amplitude)
         .def_readwrite("frequency", &Parameters::frequency)
         .def_readwrite("duration", &Parameters::duration)
+        .def_readwrite("impulse_duration", &Parameters::impulse_duration)
         .def_readwrite("dt", &Parameters::dt);
 
     py::class_<Simulation>(m, "Simulation")
@@ -144,5 +161,6 @@ PYBIND11_MODULE(cpp_backend, m) {
         .def("get_error", &Simulation::get_error)
         .def("get_control", &Simulation::get_control);
 
-    m.def("export_to_csv", &export_to_csv, py::arg("signal"), py::arg("file") = 0.01);
+    m.def("export_to_csv", &export_to_csv, py::arg("signal"), py::arg("file"), py::arg("dt") = 0.01,
+          "Exports a signal to a CSV file with time and value columns.");
 }

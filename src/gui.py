@@ -1,23 +1,54 @@
 from dearpygui import dearpygui as dpg 
 from config import FONT_PATH
+import cpp_backend as sim
+
 
 
 def run_simulation_callback():
-    a1 = dpg.get_value("a1_input")
-    a0 = dpg.get_value("a0_input")
-    b2 = dpg.get_value("b2_input")
-    b1 = dpg.get_value("b1_input")
-    b0 = dpg.get_value("b0_input")
-    kp = dpg.get_value("kp_input")
-    ki = dpg.get_value("ki_input")
+    params = sim.Parameters()
+    params.amplitude = dpg.get_value("amplitude_input")
+    params.frequency = dpg.get_value("frequency_input")
+    params.a0 = dpg.get_value("a0_input")
+    params.a1 = dpg.get_value("a1_input")
+    params.b2 = dpg.get_value("b2_input")
+    params.b1 = dpg.get_value("b1_input")
+    params.b0 = dpg.get_value("b0_input")
+    params.kp = dpg.get_value("kp_input")
+    params.ki = dpg.get_value("ki_input")
+    params.dt = dpg.get_value("dt_input")
+    params.duration = dpg.get_value("t_input")
     signal = dpg.get_value("signal_selector")
-    sim_time = dpg.get_value("czas_symulacji")
+   
+    if signal == "Sygnał prostokątny":
+        simulation = sim.Simulation(sim.InputSignalType.SQUARE, params)
+    else: 
+        if signal == "Sygnał sinusoidalny":
+            simulation = sim.Simulation(sim.InputSignalType.SINUS, params)
+        else:
+            simulation = sim.Simulation(sim.InputSignalType.TRIANGLE, params)
 
-    print(f"Symulacja: a1={a1}, a0={a0}, b2={b2}, b1={b1}, b0={b0}, Kp={kp}, Ki={ki}, sygnał={signal}, czas={sim_time}")
-    # TODO: wywołanie backendu i aktualizacja wykresu
+    
+    output = simulation.get_output()
+    input_signal = simulation.get_input()
+    error = simulation.get_error()
+    
+    dt = params.dt
+    N = len(output)
+    time = [i * dt for i in range(N)]
 
-def piRegulatorCallback():
-    return 1
+    # Clear previous series
+    dpg.delete_item("y_axis", children_only=True)
+
+    # Add series based on checkboxes
+    if dpg.get_value("show_output"):
+        dpg.add_line_series(time, output, label="Wyjście", parent="y_axis")
+    if dpg.get_value("show_input") and input_signal:
+        dpg.add_line_series(time, input_signal, label="Wejście", parent="y_axis")
+    if dpg.get_value("show_error"):
+        dpg.add_line_series(time, error, label="Uchyb", parent="y_axis")
+    if dpg.get_value("csv"):
+        sim.export_to_csv(output, "Wykres.csv", params.dt)
+
 
 # --- Tworzenie GUI ---
 dpg.create_context()
@@ -47,14 +78,14 @@ with dpg.theme() as global_theme:
 dpg.bind_theme(global_theme)
 
 with dpg.font_registry():
-    font_id = dpg.add_font(FONT_PATH, 12, default_font=True)
+    font_id = dpg.add_font(FONT_PATH, 15, default_font=True)
     dpg.add_font_range(0x0100, 0x017F, parent=font_id)
 
 with dpg.window(tag="main"):
     dpg.bind_font(font_id)
     with dpg.child_window(width=-1, height=-1, border=False):
         #kontener na cała górną sekcję 
-        with dpg.child_window(width=-1, height=200, border=False):
+        with dpg.child_window(width=-1, height=300, border=False):
             #with dpg.group(horizontal=True, horizontal_spacing=20):
              with dpg.table(header_row=False, resizable=True, policy=dpg.mvTable_SizingStretchProp, borders_innerV=True, borders_outerV=True):
                 dpg.add_table_column()
@@ -66,27 +97,27 @@ with dpg.window(tag="main"):
                     with dpg.group():
                         dpg.add_button(label="Sygnał wejściowy:", enabled=False, width=-1, height=30)
                         dpg.add_combo(tag="signal_selector", label="Sygnał", items=["Sygnał prostokątny", "Sygnał sinusoidalny", "Sygnał trójkątny"], default_value="Sygnał prostokątny")
-                        dpg.add_input_float(tag="amplitude_input", label="Amplituda", default_value=1.0)
-                        dpg.add_input_float(tag="frequency_input", label="Częstotliwość", default_value=1.0)
+                        dpg.add_input_float(tag="amplitude_input", label="Amplituda", default_value=1.0, min_value=0.0, min_clamped=True, step=0.1)
+                        dpg.add_input_float(tag="frequency_input", label="Częstotliwość", default_value=1.0, min_value=0.0, min_clamped=True, step=1.0)
                     # Parametry regulatora PI
                     #segment 2
                     with dpg.group():
                         dpg.add_button(label="Parametry układu:", enabled=False, width=-1, height=30)
-                        dpg.add_input_float(tag="a1_input", label="a1", default_value=0.0)
-                        dpg.add_input_float(tag="a0_input", label="a0", default_value=0.0)
-                        dpg.add_input_float(tag="b2_input", label="b2", default_value=0.0)
-                        dpg.add_input_float(tag="b1_input", label="b1", default_value=0.0)
-                        dpg.add_input_float(tag="b0_input", label="b0", default_value=0.0)
-                        dpg.add_input_float(tag="kp_input", label="Kp", default_value=0.0)
-                        dpg.add_input_float(tag="ki_input", label="Ki", default_value=0.0)
+                        dpg.add_input_float(tag="a1_input", label="a1", default_value=1.0)
+                        dpg.add_input_float(tag="a0_input", label="a0", default_value=1.0)
+                        dpg.add_input_float(tag="b2_input", label="b2", default_value=1.0)
+                        dpg.add_input_float(tag="b1_input", label="b1", default_value=1.0)
+                        dpg.add_input_float(tag="b0_input", label="b0", default_value=1.0)
+                        dpg.add_input_float(tag="kp_input", label="Kp", default_value=1.0)
+                        dpg.add_input_float(tag="ki_input", label="Ki", default_value=1.0)
 
 
                     # Czas symulacji
                     #segment 3
                     with dpg.group():
                         dpg.add_button(label="Parametry symulacji:", enabled=False, width=-1, height=30)
-                        dpg.add_input_float(tag="t", label="t[s]", default_value=10.0)
-                        dpg.add_input_float(tag="dt", label="dt[s]", default_value=0.1)
+                        dpg.add_input_float(tag="t_input", label="t[s]", default_value=10.0, min_value=0.0, min_clamped=True)
+                        dpg.add_input_float(tag="dt_input", label="dt[s]", default_value=0.01, min_value=0.0000001,min_clamped=True, step=0.01)
                 
         
         #przycisk start
@@ -96,11 +127,14 @@ with dpg.window(tag="main"):
             dpg.add_checkbox(tag="show_output", label="Sygnał wyjściowy", default_value=True)
             dpg.add_checkbox(tag="show_input", label="Sygnał wejściowy", default_value=False)
             dpg.add_checkbox(tag="show_error", label="Uchyb", default_value=False)
+            dpg.add_spacer(width=60)
+            dpg.add_checkbox(tag="csv", label="Zapisz do CSV", default_value=False)
         #wykres na dole 
-        with dpg.child_window(tag="plot", width=-1, height=-1, border=False ):
-            dpg.add_text("Wykres:")
+        with dpg.child_window(tag="plot_window", width=-1, height=-1, border=False ):
             #dpg.add_plot( height=300, width=600, no_inputs=True)
-            dpg.add_plot( height=-1, width=-1, no_inputs=True)
+            with dpg.plot(tag="plot", height=-1, width=-1, no_inputs=False):
+                dpg.add_plot_axis(dpg.mvXAxis, label="Czas", tag="x_axis")
+                dpg.add_plot_axis(dpg.mvYAxis, label="Wartość", tag="y_axis")
 
 # --- Start GUI ---
 dpg.show_viewport()

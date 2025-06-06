@@ -37,6 +37,7 @@ public:
        start_simulation(parameters);
     };
 
+    const std::vector<double>& get_input() const { return input_signal; }
     const std::vector<double>& get_output() const { return output_signal; }
     const std::vector<double>& get_error() const { return error_signal; }
     const std::vector<double>& get_control() const { return control_signal; }
@@ -111,7 +112,7 @@ void export_to_csv(const std::vector<double>& signal, const std::string& filenam
     file.close();
 }
 
-#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -138,9 +139,10 @@ PYBIND11_MODULE(cpp_backend, m) {
 
     py::class_<Simulation>(m, "Simulation")
         .def(py::init<InputSignalType, Parameters>())
+        .def("get_input", &Simulation::get_input)
         .def("get_output", &Simulation::get_output)
         .def("get_error", &Simulation::get_error)
         .def("get_control", &Simulation::get_control);
 
-    m.def("export_to_csv", &export_to_csv, py::arg("signal"), py::arg("filename"), py::arg("dt") = 0.01);
+    m.def("export_to_csv", &export_to_csv, py::arg("signal"), py::arg("file") = 0.01);
 }

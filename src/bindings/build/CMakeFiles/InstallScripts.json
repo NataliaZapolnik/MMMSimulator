@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"U:/MMM/MMMSimulator/src/bindings/build/cmake_install.cmake",
+		"U:/MMM/MMMSimulator/src/bindings/build/pybind11/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

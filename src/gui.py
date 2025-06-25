@@ -2,8 +2,6 @@ from dearpygui import dearpygui as dpg
 from config import FONT_PATH
 import cpp_backend as sim
 
-
-
 def run_simulation_callback():
     params = sim.Parameters()
     params.amplitude = dpg.get_value("amplitude_input")
@@ -47,10 +45,9 @@ def run_simulation_callback():
     N = len(output)
     time = [i * dt for i in range(N)]
 
-    # Clear previous series
     dpg.delete_item("y_axis", children_only=True)
+    dpg.set_axis_limits("x_axis", 0, params.duration)
 
-    # Add series based on checkboxes
     if dpg.get_value("show_output"):
         dpg.add_line_series(time, output, label="Wyjście", parent="y_axis")
     if dpg.get_value("show_input") and input_signal:

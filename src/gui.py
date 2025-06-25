@@ -73,7 +73,6 @@ def signal_selector_callback():
 
 # --- Tworzenie GUI ---
 dpg.create_context()
-#dpg.create_viewport(title="MMMSimulator", width=920, height=650, resizable=False, decorated=True)
 dpg.create_viewport(title="MMMSimulator", width=920, height=650, resizable=True, decorated=True)
 dpg.setup_dearpygui()
 
@@ -161,7 +160,6 @@ with dpg.window(tag="main"):
 
         #wykres na dole 
         with dpg.child_window(tag="plot_window", width=-1, height=-1, border=False ):
-            #dpg.add_plot( height=300, width=600, no_inputs=True)
             with dpg.plot(tag="plot", height=-1, width=-1, no_inputs=False):
                 dpg.add_plot_axis(dpg.mvXAxis, label="Czas", tag="x_axis")
                 dpg.add_plot_axis(dpg.mvYAxis, label="Wartość", tag="y_axis")
